@@ -11,11 +11,25 @@ import UIKit
 class ViewController: UIViewController
 {
     @IBOutlet weak var display: UILabel!
-    @IBOutlet weak var history: UILabel!
+    @IBOutlet weak var status: UILabel!
     
     private var enteringNumber = false
-    private var operandStack : [Double] = []
-
+    private var brain = CalculatorBrain()
+    private let memoryName = "x"
+    
+    override func viewDidLoad()
+    {
+        // make each button a round rect
+        for child in view.subviews {
+            if let button = child as? UIButton {
+                button.layer.cornerRadius = 4.0
+            }
+        }
+        display.adjustsFontSizeToFitWidth = true
+        status.adjustsFontSizeToFitWidth = true
+        clear()
+    }
+    
     @IBAction func appendDot(sender: UIButton)
     {
         println("appendDot: \(sender.currentTitle!)")
@@ -34,90 +48,96 @@ class ViewController: UIViewController
             else {
                 display.text = digit
                 enteringNumber = true
+                display.textColor = UIColor.blackColor()
             }
+            update()
         }
-    }
-    
-    private func addHistory(str:String)
-    {
-        history.text = "\(history.text!) \(str)"
     }
     
     @IBAction func clear()
     {
         println("CLEAR")
+        brain.clear()
         enteringNumber = false
-        operandStack = []
-        displayValue = 0
-        history.text = ""
+        update()
     }
     
-    private func performOperation(op:(Double, Double) -> Double)
-    {
-        if operandStack.count >= 2 {
-            displayValue = op(operandStack.removeLast(), operandStack.removeLast())
-            enter()
+    @IBAction func erase() {
+        if enteringNumber {
+            var num = display.text!
+            removeLast(&num)
+            display.text = count(num) > 0 ? num : "0"
+        } else {
+            brain.undo()
         }
+        update()
     }
     
-    private func performOperation(op:(Double) -> Double)
-    {
-        if operandStack.count >= 1 {
-            displayValue = op(operandStack.removeLast())
-            enter()
-        }
-    }
-    
-    private func performOperation(val:Double)
-    {
-        displayValue = val
-        enter()
-    }
-    
-    @IBAction func operate(sender: UIButton)
-    {
-        let operation = sender.currentTitle!
-        
+    @IBAction func useMemory() {
         if enteringNumber {
             enter()
         }
-        addHistory(operation)
-        switch operation {
-            case "✖️": performOperation {$0 * $1}
-            case "➗": performOperation {$1 / $0}
-            case "➕": performOperation {$0 + $1}
-            case "➖": performOperation {$0 - $1}
-            case "√": performOperation(sqrt)
-            case "sin": performOperation(sin)
-            case "cos": performOperation(cos)
-            case "tan": performOperation(tan)
-            case "π": performOperation(M_PI)
-            default: break
+        brain.pushOperand(memoryName)
+        update()
+    }
+
+    @IBAction func setMemory() {
+        if let x = displayValue {
+            brain.setVariable(memoryName, x)
+            enteringNumber = false
+            update()
         }
     }
+
+    @IBAction func changeSign(sender: UIButton) {
+        if enteringNumber {
+            display.text = "\(-(displayValue ?? 0))"
+        } else {
+            operate(sender)
+        }
+    }
+    @IBAction func operate(sender: UIButton)
+    {
+        if let operation = sender.currentTitle {
+            if enteringNumber {
+                enter()
+            }
+            brain.pushOperation(operation)
+            update()
+        }
+     }
     
     @IBAction func enter()
     {
-        if (enteringNumber) {
-            addHistory(display.text!)
-        }
         enteringNumber = false
-        operandStack.append(displayValue)
-        println("operandStack = \(operandStack)")
+        if let value = displayValue {
+            brain.pushOperand(value)
+            update()
+        }
     }
     
-    private var displayValue: Double {
-        get {
-            return NSNumberFormatter().numberFromString(display.text!)?.doubleValue ?? 0
+    private func update()
+    {
+        if enteringNumber {
+            status.text = " " + brain.fullDescription
+        } else {
+            var str = brain.fullDescription
+            if count(str) == 0 {
+                status.text = " "
+                display.text = "0.0"
+                display.textColor = UIColor.blackColor()
+            } else {
+                status.text = str + "="
+                var result = brain.evaluateResult()
+                display.text = result.description
+                display.textColor = result.value == nil ? UIColor.redColor() : UIColor.blackColor()
+            }
         }
-        set {
-            enteringNumber = false
-            
-            //display.text = "\(newValue)"
-            let nf = NSNumberFormatter()
-            nf.numberStyle = NSNumberFormatterStyle.DecimalStyle
-            nf.maximumFractionDigits = 8
-            display.text = nf.stringFromNumber(newValue)
+    }
+    
+    private var displayValue: Double? {
+        get {
+            return NSNumberFormatter().numberFromString(display.text!)?.doubleValue
         }
     }
 }
