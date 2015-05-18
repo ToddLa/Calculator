@@ -71,7 +71,7 @@ class CalculatorBrain : Printable
     private var opStack = [Op]()
     private var knownOps = [String : Op]()
     private var variableValues  = [String : Double]()
-    private var symbolMap = ["➕":"+", "➖":"-", "✖️":"×", "➗":"/"]
+    private let debug = true
 
     init ()
     {
@@ -99,7 +99,7 @@ class CalculatorBrain : Printable
     }
 
     /// get/set the currect state as a PropertyList
-    var state : AnyObject {
+    var program : AnyObject {
         get {
             return [
                 "stack": opStack.map {$0.description},
@@ -168,8 +168,6 @@ class CalculatorBrain : Printable
     
     func pushOperation(symbol: String) -> Double?
     {
-        var symbol = symbolMap[symbol] ?? symbol
-
         if let op = knownOps[symbol] {
             opStack.append(op)
         }
@@ -219,20 +217,14 @@ class CalculatorBrain : Printable
     /// evaluate the current stack as a Result
     func evaluateResult() -> Result
     {
-        let (result, stack) = evaluate(opStack)
+        if debug {
+            let eval = evaluate(opStack)
+            println("\(opStack) = \(eval.result) with \(eval.stack) left over")
+            println("description: \(self) = \(eval.result)")
+            println("program: \(program)")
+        }
 
-        // debug spew
-        println("\(opStack) = \(result) with \(stack) left over")
-        println("description: \(self) = \(result)")
-        println("state: \(state)")
-
-        // test save/restore state (shoud be a test case!)
-        var saveStack = opStack
-        var plist : AnyObject = self.state
-        self.state = plist
-        println("\(opStack) == \(saveStack)")
-
-        return result
+        return evaluate(opStack).result
     }
 
     /// evaluate the result of the current stack as a Double
@@ -242,6 +234,7 @@ class CalculatorBrain : Printable
     }
 
     // recursive helper for description
+    // returns description of stack as a string, plus the remaining un-evalulated stack
     private func description(stack:[Op]) -> (result:String, stack:[Op], precedence:Int)
     {
         if stack.count > 0 {
@@ -262,7 +255,6 @@ class CalculatorBrain : Printable
                 }
                 return (op.sym+rhs.result, rhs.stack, Int.max)
             case .BinaryOperation(var symbol, let precedence, _):
-                symbol = symbolMap[symbol] ?? symbol
                 var rhs = description(stack)
                 var lhs = description(rhs.stack)
                 if lhs.precedence < precedence {
@@ -282,14 +274,14 @@ class CalculatorBrain : Printable
     /// if multiple expressions are on the stack all expressions are rendered separated by commas
     ///
     var fullDescription : String {
-        var results : [String] = []
-        var stack = opStack
-        while (stack.count > 0) {
-            let desc = description(stack)
-            stack = desc.stack
-            results.append(desc.result)
+        if (opStack.isEmpty) {return ""}
+        var desc = description(opStack)
+        while desc.stack.count > 0 {
+            let str = desc.result
+            desc = description(desc.stack)
+            desc.result += ", " + str
         }
-        return ",".join(results.reverse())
+        return desc.result
     }
 
     /// render the current `stack` as a string using **infix** notation
@@ -298,6 +290,7 @@ class CalculatorBrain : Printable
     /// will be returned. use `fullDescription` if you want entire stack.
     ///
     var description : String {
+        if (opStack.isEmpty) {return ""}
         return description(opStack).result
     }
 }
