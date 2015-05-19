@@ -15,8 +15,10 @@ class CalculatorViewController: UIViewController
     
     private var enteringNumber = false
     private var brain = CalculatorBrain()
-    private let memoryName = "x"
-    
+    private let memoryName = "x"  // variable name used for Memory
+    private var errorColor = UIColor.redColor()
+    private var normalColor = UIColor.blackColor()
+
     override func viewDidLoad()
     {
         // make each button a round rect
@@ -25,6 +27,7 @@ class CalculatorViewController: UIViewController
                 button.layer.cornerRadius = 4.0
             }
         }
+        normalColor = display.textColor
         display.adjustsFontSizeToFitWidth = true
         status.adjustsFontSizeToFitWidth = true
         clear()
@@ -48,7 +51,6 @@ class CalculatorViewController: UIViewController
             else {
                 display.text = digit
                 enteringNumber = true
-                display.textColor = UIColor.blackColor()
             }
             update()
         }
@@ -115,22 +117,25 @@ class CalculatorViewController: UIViewController
             update()
         }
     }
-    
+
+    // update UI to match state of the model (aka brain)
     private func update()
     {
+        var desc = brain.fullDescription
+
         if enteringNumber {
-            status.text = " " + brain.fullDescription
+            status.text = " " + desc
+            display.textColor = normalColor
         } else {
-            var str = brain.fullDescription
-            if count(str) == 0 {
+            if count(desc) == 0 {
                 status.text = " "
                 display.text = "0.0"
-                display.textColor = UIColor.blackColor()
+                display.textColor = normalColor
             } else {
-                status.text = str + "="
+                status.text = desc + "="
                 var result = brain.evaluateResult()
                 display.text = result.description
-                display.textColor = result.value == nil ? UIColor.redColor() : UIColor.blackColor()
+                display.textColor = result.value == nil ? errorColor : normalColor
             }
         }
     }
