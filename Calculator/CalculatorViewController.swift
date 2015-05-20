@@ -15,9 +15,13 @@ class CalculatorViewController: UIViewController
     
     private var enteringNumber = false
     private var brain = CalculatorBrain()
-    private let memoryName = "x"  // variable name used for Memory
-    private var errorColor = UIColor.redColor()
+    private let memoryName = "M"  // variable name used for Memory
+    private let errorColor = UIColor.redColor()
     private var normalColor = UIColor.blackColor()
+
+    override func preferredStatusBarStyle() -> UIStatusBarStyle {
+        return .LightContent
+    }
 
     override func viewDidLoad()
     {
@@ -27,7 +31,7 @@ class CalculatorViewController: UIViewController
                 button.layer.cornerRadius = 4.0
             }
         }
-        normalColor = display.textColor
+        normalColor = display.textColor // use color in storyboard
         display.adjustsFontSizeToFitWidth = true
         status.adjustsFontSizeToFitWidth = true
         clear()
