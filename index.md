@@ -1,6 +1,6 @@
 ---
-title:Wombat
-layout:page
+title: Wombat
+layout: page
 ---
 
 # WOMBAT
