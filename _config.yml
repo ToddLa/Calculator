@@ -1,2 +1,7 @@
-title: Your Site Title
-theme: none
+title: Wombat!!
+description: Home page for Wombat, LLC
+google_analytics: 
+show_downloads: true
+theme: jekyll-theme-minimal
+gems:
+  - jekyll-mentions
