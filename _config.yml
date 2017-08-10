@@ -1,6 +1,6 @@
 title: Wombat!!
 description: Home page for Wombat, LLC
 google_analytics: 
-show_downloads: true
+show_downloads: false
 theme: jekyll-theme-minimal
 
