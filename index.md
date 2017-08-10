@@ -1,6 +1,6 @@
 ---
-title: Welcome
-layout: wombat
+title:Wombat
+layout:page
 ---
 
 # WOMBAT
