@@ -1,5 +1,6 @@
 ---
-title:Test
-layout:wombat
+layout: wombat
+title: Test
 ---
+
 # Test
