@@ -1,5 +1,5 @@
 ---
-layout: wombat
+layout: test
 title: Test
 ---
 
